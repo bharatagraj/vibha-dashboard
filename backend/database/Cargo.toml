@@ -1,12 +1,13 @@
 [package]
-name = "vibha-database"
+name    = "vibha-database"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-anyhow = { workspace = true }
-uuid = { workspace = true }
-chrono = { workspace = true }
+vibha-common = { path = "../common" }
+sqlx         = { workspace = true, features = ["runtime-tokio-native-tls", "postgres"] }
+tokio        = { workspace = true, features = ["full"] }
+anyhow       = { workspace = true }
+tracing      = { workspace = true }
+serde        = { workspace = true }
+serde_json   = { workspace = true }

@@ -1,0 +1,139 @@
+{
+  "domain": "greenops",
+  "version": "1.0",
+  "schema_name": "dashboard",
+  "tables": [
+    {
+      "name": "emissions",
+      "description": "Carbon footprint data by scope and facility",
+      "row_level_security": {
+        "policy": "org_id = current_org_id",
+        "tenant_column": "org_id"
+      },
+      "columns": [
+        {
+          "name": "id",
+          "column_type": "uuid",
+          "description": "Primary key",
+          "filterable": false,
+          "aggregatable": false,
+          "valid_operators": [],
+          "enum_values": null
+        },
+        {
+          "name": "org_id",
+          "column_type": "uuid",
+          "description": "Organization ID (RLS tenant key)",
+          "filterable": false,
+          "aggregatable": false,
+          "valid_operators": [],
+          "enum_values": null
+        },
+        {
+          "name": "facility_name",
+          "column_type": "text",
+          "description": "Facility or site name",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", "ilike", "in"],
+          "enum_values": null
+        },
+        {
+          "name": "scope",
+          "column_type": "text",
+          "description": "Emission scope (Scope 1, 2, or 3)",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", "in"],
+          "enum_values": ["Scope 1", "Scope 2", "Scope 3"]
+        },
+        {
+          "name": "emissions_tco2e",
+          "column_type": "numeric",
+          "description": "Total emissions in tonnes CO2-equivalent",
+          "filterable": true,
+          "aggregatable": true,
+          "valid_operators": [">", "<", "=", "between", ">=", "<="],
+          "aggregations": ["sum", "avg", "min", "max", "count"],
+          "enum_values": null
+        },
+        {
+          "name": "measurement_date",
+          "column_type": "date",
+          "description": "Date of measurement (YYYY-MM-DD)",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", ">", "<", "between", ">=", "<="],
+          "enum_values": null
+        },
+        {
+          "name": "fiscal_year",
+          "column_type": "integer",
+          "description": "Fiscal year (2024, 2025, 2026)",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", ">", "<", "in"],
+          "enum_values": null
+        }
+      ],
+      "relationships": []
+    },
+    {
+      "name": "facilities",
+      "description": "Master data for facilities/sites",
+      "row_level_security": {
+        "policy": "org_id = current_org_id",
+        "tenant_column": "org_id"
+      },
+      "columns": [
+        {
+          "name": "id",
+          "column_type": "uuid",
+          "description": "Primary key",
+          "filterable": false,
+          "aggregatable": false,
+          "valid_operators": [],
+          "enum_values": null
+        },
+        {
+          "name": "org_id",
+          "column_type": "uuid",
+          "description": "Organization ID (RLS tenant key)",
+          "filterable": false,
+          "aggregatable": false,
+          "valid_operators": [],
+          "enum_values": null
+        },
+        {
+          "name": "name",
+          "column_type": "text",
+          "description": "Facility name",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", "ilike", "in"],
+          "enum_values": null
+        },
+        {
+          "name": "country",
+          "column_type": "text",
+          "description": "Country code (ISO 3166-1 alpha-2)",
+          "filterable": true,
+          "aggregatable": false,
+          "valid_operators": ["=", "in"],
+          "enum_values": ["US", "CA", "UK", "DE", "FR", "IN", "AU", "SG"]
+        },
+        {
+          "name": "headcount",
+          "column_type": "integer",
+          "description": "Number of employees",
+          "filterable": true,
+          "aggregatable": true,
+          "valid_operators": [">", "<", "=", "between"],
+          "aggregations": ["sum", "avg", "count"],
+          "enum_values": null
+        }
+      ],
+      "relationships": []
+    }
+  ]
+}
