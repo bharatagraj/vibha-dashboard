@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { DashboardHome } from './components/DashboardHome'
+import { SchemaDebugger } from './components/SchemaDebugger'
+import { DashboardBuilder } from './components/DashboardBuilder'
 import { QueryMode } from '@/types'
 import { useParse } from '@/hooks/useParse'
 import { ChartRenderer } from '@/components/ChartRenderer'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { logPerformance } from '@/services/performanceMonitor'
 
-type ViewMode = 'home' | 'query'
+type ViewMode = 'home' | 'query' | 'schema' | 'builder'
 
 export const App: React.FC = () => {
   logPerformance('App render')
-  
+
   const [viewMode, setViewMode] = useState<ViewMode>('home')
   const [mode, setMode] = useState<QueryMode>('quick')
   const [query, setQuery] = useState('')
@@ -60,6 +62,36 @@ export const App: React.FC = () => {
           >
             🔍 Advanced Query
           </button>
+          <button
+            onClick={() => setViewMode('schema')}
+            style={{
+              padding: '1rem 0',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: viewMode === 'schema' ? '3px solid #0066cc' : 'none',
+              color: viewMode === 'schema' ? '#0066cc' : '#666',
+              cursor: 'pointer',
+              fontWeight: viewMode === 'schema' ? '600' : '400',
+              fontSize: '1rem',
+            }}
+          >
+            📋 Schema Debugger
+          </button>
+          <button
+            onClick={() => setViewMode('builder')}
+            style={{
+              padding: '1rem 0',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: viewMode === 'builder' ? '3px solid #0066cc' : 'none',
+              color: viewMode === 'builder' ? '#0066cc' : '#666',
+              cursor: 'pointer',
+              fontWeight: viewMode === 'builder' ? '600' : '400',
+              fontSize: '1rem',
+            }}
+          >
+            🎨 Dashboard Builder
+          </button>
         </div>
 
         {viewMode === 'home' && <DashboardHome />}
@@ -91,6 +123,14 @@ export const App: React.FC = () => {
             )}
           </div>
         )}
+
+        {viewMode === 'schema' && (
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+            <SchemaDebugger />
+          </div>
+        )}
+
+        {viewMode === 'builder' && <DashboardBuilder />}
       </div>
     </ErrorBoundary>
   )
