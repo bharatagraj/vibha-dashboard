@@ -118,33 +118,42 @@ export function DashboardBuilder() {
     });
   };
 
-  const handleSaveDashboard = async () => {
+    const handleSaveDashboard = async () => {
     setSaving(true);
     setSaveStatus('idle');
     setSaveMessage('');
 
     try {
-      const dashboardConfig: DashboardConfig = {
-        id: `dashboard_${Date.now()}`,
+      const payload = {
         name: `${form.domain.toUpperCase()} - ${form.table}`,
         domain: form.domain,
         table: form.table,
         kpis: form.kpis,
         filters: form.filters,
         charts: form.charts,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
-      // TODO: Send to backend POST /api/v1/dashboards
-      console.log('📊 Saving dashboard config:', dashboardConfig);
+      console.log('📊 Sending to backend:', payload);
 
-      // Simulate save delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('http://localhost:8000/api/v1/dashboards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Dashboard saved with ID:', result.id);
 
       setSaveStatus('success');
-      setSaveMessage('✅ Dashboard saved successfully!');
-      
+      setSaveMessage(`✅ Dashboard saved successfully! (ID: ${result.id})`);
+
       // Reset after success
       setTimeout(() => {
         setForm({
@@ -158,8 +167,9 @@ export function DashboardBuilder() {
         setSaveStatus('idle');
       }, 2000);
     } catch (err) {
+      console.error('❌ Save error:', err);
       setSaveStatus('error');
-      setSaveMessage(`❌ Error saving dashboard: ${err}`);
+      setSaveMessage(`❌ Error saving dashboard: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSaving(false);
     }

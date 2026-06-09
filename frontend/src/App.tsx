@@ -8,7 +8,7 @@ import { ChartRenderer } from '@/components/ChartRenderer'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { logPerformance } from '@/services/performanceMonitor'
 
-type ViewMode = 'home' | 'query' | 'schema' | 'builder'
+type ViewMode = 'home' | 'query' | 'schema' | 'builder' | 'selector'
 
 export const App: React.FC = () => {
   logPerformance('App render')
@@ -92,6 +92,21 @@ export const App: React.FC = () => {
           >
             🎨 Dashboard Builder
           </button>
+          <button
+            onClick={() => setViewMode('selector')}
+            style={{
+              padding: '1rem 0',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: viewMode === 'selector' ? '3px solid #0066cc' : 'none',
+              color: viewMode === 'selector' ? '#0066cc' : '#666',
+              cursor: 'pointer',
+              fontWeight: viewMode === 'selector' ? '600' : '400',
+              fontSize: '1rem',
+            }}
+          >
+            💾 Saved Dashboards
+          </button>		  
         </div>
 
         {viewMode === 'home' && <DashboardHome />}
@@ -131,6 +146,7 @@ export const App: React.FC = () => {
         )}
 
         {viewMode === 'builder' && <DashboardBuilder />}
+		{viewMode === 'selector' && <DashboardSelector />}
       </div>
     </ErrorBoundary>
   )
