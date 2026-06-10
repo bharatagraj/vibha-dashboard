@@ -21,6 +21,19 @@ interface FormState {
   charts: ChartConfig[];
 }
 
+interface DashboardBuilderProps {
+  editDashboardId?: string;
+  editDashboardData?: {
+    name: string;
+    domain: string;
+    table: string;
+    kpis: KPIConfig[];
+    filters: [];
+    charts: ChartConfig[];
+  };
+  onEditComplete?: () => void;
+}
+
 const AVAILABLE_DOMAINS = {
   greenops: ['emissions', 'sales'],
   healthcare: ['patients', 'procedures'],
@@ -35,7 +48,7 @@ const CHART_TYPES = [
   { id: 'table', label: 'Data Table', icon: '📋', description: 'Display raw data' },
 ];
 
-export function DashboardBuilder() {
+export function DashboardBuilder({ editDashboardId, editDashboardData, onEditComplete }: DashboardBuilderProps = {}) {
   const [step, setStep] = useState<WizardStep>('step1');
   const [form, setForm] = useState<FormState>({
     domain: 'greenops',
@@ -52,6 +65,21 @@ export function DashboardBuilder() {
     form.domain,
     form.table
   );
+
+  // Load dashboard data if in edit mode
+  React.useEffect(() => {
+    if (editDashboardData) {
+      setForm({
+        domain: editDashboardData.domain,
+        table: editDashboardData.table,
+        kpis: editDashboardData.kpis,
+        filters: editDashboardData.filters,
+        charts: editDashboardData.charts,
+      });
+      setStep('step1');
+    }
+  }, [editDashboardData]);
+
 
   const availableTables = useMemo(() => {
     return AVAILABLE_DOMAINS[form.domain as keyof typeof AVAILABLE_DOMAINS] || [];
@@ -118,14 +146,14 @@ export function DashboardBuilder() {
     });
   };
 
-    const handleSaveDashboard = async () => {
+  const handleSaveDashboard = async () => {
     setSaving(true);
     setSaveStatus('idle');
     setSaveMessage('');
 
     try {
       const payload = {
-        name: `${form.domain.toUpperCase()} - ${form.table}`,
+        name: editDashboardData?.name || `${form.domain.toUpperCase()} - ${form.table}`,
         domain: form.domain,
         table: form.table,
         kpis: form.kpis,
@@ -133,10 +161,16 @@ export function DashboardBuilder() {
         charts: form.charts,
       };
 
-      console.log('📊 Sending to backend:', payload);
+      const isUpdate = !!editDashboardId;
+      const url = isUpdate 
+        ? `http://localhost:8000/api/v1/dashboards/${editDashboardId}`
+        : 'http://localhost:8000/api/v1/dashboards';
+      const method = isUpdate ? 'PUT' : 'POST';
 
-      const response = await fetch('http://localhost:8000/api/v1/dashboards', {
-        method: 'POST',
+      console.log(`📊 ${isUpdate ? 'Updating' : 'Saving'} dashboard:`, payload);
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -149,10 +183,15 @@ export function DashboardBuilder() {
       }
 
       const result = await response.json();
-      console.log('✅ Dashboard saved with ID:', result.id);
+      console.log(`✅ Dashboard ${isUpdate ? 'updated' : 'saved'} with ID:`, result.id);
 
       setSaveStatus('success');
-      setSaveMessage(`✅ Dashboard saved successfully! (ID: ${result.id})`);
+      setSaveMessage(`✅ Dashboard ${isUpdate ? 'updated' : 'saved'} successfully! (ID: ${result.id})`);
+
+      // Call callback if provided (for edit mode)
+      if (isUpdate && onEditComplete) {
+        setTimeout(() => onEditComplete(), 1500);
+      }
 
       // Reset after success
       setTimeout(() => {
@@ -169,7 +208,7 @@ export function DashboardBuilder() {
     } catch (err) {
       console.error('❌ Save error:', err);
       setSaveStatus('error');
-      setSaveMessage(`❌ Error saving dashboard: ${err instanceof Error ? err.message : String(err)}`);
+      setSaveMessage(`❌ Error ${editDashboardId ? 'updating' : 'saving'} dashboard: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSaving(false);
     }

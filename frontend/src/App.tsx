@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { DashboardHome } from './components/DashboardHome'
 import { SchemaDebugger } from './components/SchemaDebugger'
 import { DashboardBuilder } from './components/DashboardBuilder'
+import { DashboardSelector } from './components/DashboardSelector'
 import { QueryMode } from '@/types'
 import { useParse } from '@/hooks/useParse'
 import { ChartRenderer } from '@/components/ChartRenderer'
@@ -15,6 +16,8 @@ export const App: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('home')
   const [mode, setMode] = useState<QueryMode>('quick')
+  const [editDashboardId, setEditDashboardId] = useState<string | undefined>();
+  const [editDashboardData, setEditDashboardData] = useState<any>();
   const [query, setQuery] = useState('')
   const { parse, loading, error, filterSpec, data } = useParse()
 
@@ -145,8 +148,26 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {viewMode === 'builder' && <DashboardBuilder />}
-		{viewMode === 'selector' && <DashboardSelector />}
+        {viewMode === 'builder' && (
+          <DashboardBuilder
+            editDashboardId={editDashboardId}
+            editDashboardData={editDashboardData}
+            onEditComplete={() => {
+              setEditDashboardId(undefined);
+              setEditDashboardData(undefined);
+              setViewMode('selector');
+            }}
+          />
+        )}
+        {viewMode === 'selector' && (
+          <DashboardSelector
+            onEditDashboard={(id, data) => {
+              setEditDashboardId(id);
+              setEditDashboardData(data);
+              setViewMode('builder');
+            }}
+          />
+        )}
       </div>
     </ErrorBoundary>
   )

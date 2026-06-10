@@ -312,6 +312,88 @@ async fn get_dashboard(
     }
 }
 
+async fn update_dashboard(
+    State(state): State<AppState>,
+    axum::extract::Path(id): axum::extract::Path<String>,
+    Json(req): Json<SaveDashboardRequest>,
+) -> impl IntoResponse {
+    info!("📝 Updating dashboard: {}", id);
+    
+    let dashboard_id = match Uuid::parse_str(&id) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(SaveDashboardResponse {
+                    id: String::new(),
+                    name: String::new(),
+                    domain: String::new(),
+                    table: String::new(),
+                    created_at: String::new(),
+                }),
+            ).into_response()
+        }
+    };
+
+    let result = sqlx::query(
+        "UPDATE dashboard.dashboards 
+         SET name = $1, domain = $2, table_name = $3, kpis = $4, filters = $5, charts = $6, updated_at = NOW()
+         WHERE id = $7"
+    )
+    .bind(&req.name)
+    .bind(&req.domain)
+    .bind(&req.table)
+    .bind(serde_json::to_value(&req.kpis).unwrap_or(json!([])))
+    .bind(serde_json::to_value(&req.filters).unwrap_or(json!([])))
+    .bind(serde_json::to_value(&req.charts).unwrap_or(json!([])))
+    .bind(dashboard_id)
+    .execute(&state.db_pool)
+    .await;
+
+    match result {
+        Ok(rows) => {
+            if rows.rows_affected() == 0 {
+                info!("⚠️  Dashboard not found: {}", id);
+                return (
+                    StatusCode::NOT_FOUND,
+                    Json(SaveDashboardResponse {
+                        id: String::new(),
+                        name: String::new(),
+                        domain: String::new(),
+                        table: String::new(),
+                        created_at: String::new(),
+                    }),
+                ).into_response()
+            }
+            info!("✅ Dashboard updated: {}", id);
+            return (
+                StatusCode::OK,
+                Json(SaveDashboardResponse {
+                    id,
+                    name: req.name,
+                    domain: req.domain,
+                    table: req.table,
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                }),
+            ).into_response()
+        }
+        Err(e) => {
+            info!("❌ Failed to update dashboard: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(SaveDashboardResponse {
+                    id: String::new(),
+                    name: String::new(),
+                    domain: String::new(),
+                    table: String::new(),
+                    created_at: String::new(),
+                }),
+            ).into_response()
+        }
+    }
+}
+
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -358,7 +440,7 @@ async fn main() {
         .route("/api/v1/direct-query", post(direct_query))
         .route("/api/v1/schema/:domain/:table", get(schema_registry::get_schema))
         .route("/api/v1/dashboards", get(list_dashboards).post(save_dashboard))
-        .route("/api/v1/dashboards/:id", get(get_dashboard))
+        .route("/api/v1/dashboards/:id", get(get_dashboard).put(update_dashboard))
         .with_state(state)
         .layer(cors);
 

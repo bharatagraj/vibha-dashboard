@@ -22,7 +22,11 @@ interface LoadedDashboard extends DashboardListItem {
   charts: any[];
 }
 
-export function DashboardSelector() {
+interface DashboardSelectorProps {
+  onEditDashboard?: (id: string, data: LoadedDashboard) => void;
+}
+
+export function DashboardSelector({ onEditDashboard }: DashboardSelectorProps = {}) {
   const [dashboards, setDashboards] = useState<DashboardListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
