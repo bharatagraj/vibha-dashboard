@@ -48,7 +48,7 @@ export function DashboardSelector({ onEditDashboard }: DashboardSelectorProps = 
         throw new Error(`HTTP ${response.status}`);
       }
       const data = await response.json();
-      setDashboards(data);
+      setDashboards(Array.isArray(data) ? data : data.data);
     } catch (err) {
       console.error('❌ Error fetching dashboards:', err);
       setError(err instanceof Error ? err.message : 'Failed to load dashboards');
@@ -139,7 +139,7 @@ export function DashboardSelector({ onEditDashboard }: DashboardSelectorProps = 
                     transition: 'all 0.2s',
                   }}
                 >
-                  <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', color: '#333' }}>
                     {loadingDetail && selectedId === dash.id ? '⏳ Loading...' : dash.name}
                   </div>
                   <div style={{ fontSize: '0.85rem', color: '#666' }}>
