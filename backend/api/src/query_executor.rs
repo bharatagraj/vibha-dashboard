@@ -97,9 +97,16 @@ pub fn parse_scope_definition(query_def: &Value) -> Result<ParsedScope, QueryExe
 
         let scope_category = src
             .get("scope_category")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| QueryExecutorError::InvalidScopeDefinition("Source missing 'scope_category'".to_string()))?
-            .to_string();
+            .and_then(|v| {
+                if let Some(s) = v.as_str() {
+                    Some(s.to_string())
+                } else if let Some(n) = v.as_i64() {
+                    Some(n.to_string())
+                } else {
+                    None
+                }
+            })
+            .ok_or_else(|| QueryExecutorError::InvalidScopeDefinition("Source missing 'scope_category'".to_string()))?;
 
         sources.push(QuerySource {
             domain,

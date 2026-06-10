@@ -18,6 +18,7 @@ use sqlx::Row;
 mod schema_registry;
 mod query_executor;
 mod scopes_handler;
+mod dashboard_data_handler;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DirectQueryRequest {
@@ -445,6 +446,7 @@ async fn main() {
         .route("/api/v1/scopes", get(scopes_handler::list_scopes))
         .route("/api/v1/scopes/:id", get(scopes_handler::get_scope))
         .route("/api/v1/dashboards", get(list_dashboards).post(save_dashboard))
+        .route("/api/v1/dashboards/:id/data", get(dashboard_data_handler::get_dashboard_data))
         .route("/api/v1/dashboards/:id", get(get_dashboard).put(update_dashboard))
         .with_state(state)
         .layer(cors);
