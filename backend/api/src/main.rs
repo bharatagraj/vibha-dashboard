@@ -16,6 +16,7 @@ use uuid::Uuid;
 use sqlx::Row;
 
 mod schema_registry;
+mod query_executor;
 mod scopes_handler;
 
 #[derive(Serialize, Deserialize, Debug)]
