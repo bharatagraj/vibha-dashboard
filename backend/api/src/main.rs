@@ -19,6 +19,7 @@ mod schema_registry;
 mod query_executor;
 mod scopes_handler;
 mod dashboard_data_handler;
+mod kpi_metadata;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DirectQueryRequest {

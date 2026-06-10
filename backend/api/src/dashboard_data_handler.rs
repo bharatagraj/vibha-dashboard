@@ -1,4 +1,5 @@
 /// Hour 2: Dashboard Data Endpoint Handler
+/// Updated for Hour 3: KPI Metadata support
 
 use axum::extract::{State, Path};
 use serde_json::Value;
@@ -10,7 +11,7 @@ pub struct DashboardDataResponse {
     pub name: String,
     pub scope_name: String,
     pub data: Vec<Value>,
-    pub kpis: Vec<String>,
+    pub kpis: Vec<crate::kpi_metadata::KpiMetadata>,
     pub summary: DashboardSummary,
 }
 
@@ -60,25 +61,31 @@ pub async fn get_dashboard_data(
 
     println!("[dashboard_data] Dashboard: name={}, domain={}", dashboard_name, domain);
 
-    // 2. Extract KPIs from dashboard
-    let kpis: Vec<String> = kpis_value
+    // 2. Extract and validate KPIs with metadata
+    let kpi_definitions: Vec<crate::kpi_metadata::KpiDefinition> = kpis_value
         .as_array()
         .unwrap_or(&vec![])
         .iter()
         .filter_map(|kpi| {
-            if let Value::Object(obj) = kpi {
-                obj.get("name").and_then(|v| v.as_str()).map(|s| s.to_string())
-            } else if let Value::String(s) = kpi {
-                Some(s.clone())
-            } else {
-                None
-            }
+            serde_json::from_value(kpi.clone()).ok()
         })
         .collect();
 
-    println!("[dashboard_data] KPIs: {:?}", kpis);
+    // Convert to full metadata (handles both simple string and full struct formats)
+    let kpi_metadata: Vec<crate::kpi_metadata::KpiMetadata> = kpi_definitions
+        .iter()
+        .map(|kpi_def| kpi_def.clone().into_metadata())
+        .collect();
 
-    if kpis.is_empty() {
+    // Extract database column names for query execution
+    let database_columns: Vec<String> = kpi_metadata
+        .iter()
+        .map(|m| m.database_column.clone())
+        .collect();
+
+    println!("[dashboard_data] KPIs (with metadata): {:?}", kpi_metadata);
+
+    if database_columns.is_empty() {
         return Err((
             axum::http::StatusCode::BAD_REQUEST,
             "Dashboard has no KPIs configured".to_string(),
@@ -107,13 +114,12 @@ pub async fn get_dashboard_data(
     let query_def: Value = scope_row.get("query_definition");
 
     println!("[dashboard_data] Found scope: {}", scope_name);
-    println!("[dashboard_data] Query definition: {}", serde_json::to_string_pretty(&query_def).unwrap_or_default());
 
-    // 4. Execute the scope query with dashboard's KPIs
+    // 4. Execute the scope query with database column names
     let data = crate::query_executor::execute_scope_query(
         &state.db_pool,
         &query_def,
-        &kpis,
+        &database_columns,
         limit,
     )
     .await
@@ -125,17 +131,17 @@ pub async fn get_dashboard_data(
     let row_count = data.len() as i32;
     let execution_time_ms = start_time.elapsed().as_millis() as i32;
 
-    // 5. Build response
+    // 5. Build response with full KPI metadata
     let response = DashboardDataResponse {
         id: dashboard_id.clone(),
         name: dashboard_name,
         scope_name,
         data,
-        kpis: kpis.clone(),
+        kpis: kpi_metadata,
         summary: DashboardSummary {
             row_count,
             execution_time_ms,
-            columns: kpis,
+            columns: database_columns,
         },
     };
 
