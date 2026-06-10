@@ -146,7 +146,7 @@ pub fn parse_scope_definition(query_def: &Value) -> Result<ParsedScope, QueryExe
 
 /// Build a SELECT clause from requested KPIs (cast to TEXT for dynamic queries)
 /// 
-/// Example: ["co2e", "category", "date"] -> "dashboard.emissions.co2e::TEXT as co2e, ..."
+/// Build a SELECT clause from requested KPIs (cast to TEXT for dynamic queries)
 fn build_select_clause(kpis: &[String], parsed_scope: &ParsedScope) -> Result<String, QueryExecutorError> {
     if kpis.is_empty() {
         return Err(QueryExecutorError::InvalidScopeDefinition(
@@ -154,19 +154,14 @@ fn build_select_clause(kpis: &[String], parsed_scope: &ParsedScope) -> Result<St
         ));
     }
 
-    // Use the first source's table as the primary table for column references
-    let primary_table = &parsed_scope.sources[0].table;
-
+    // Use first source's alias (t0) instead of full schema.table reference
     let columns: Vec<String> = kpis
         .iter()
-        .map(|kpi| format!("\"{}\".\"{}\".\"{}\"::TEXT as \"{}\"", "dashboard", primary_table, kpi, kpi))
+        .map(|kpi| format!("t0.\"{}\"::TEXT as \"{}\"", kpi, kpi))
         .collect();
 
     Ok(columns.join(", "))
 }
-
-/// Build a FROM clause with proper table aliases
-/// 
 /// Example: "FROM dashboard.emissions AS t0"
 fn build_from_clause(parsed_scope: &ParsedScope) -> String {
     parsed_scope
@@ -177,7 +172,7 @@ fn build_from_clause(parsed_scope: &ParsedScope) -> String {
             let alias = format!("t{}", idx);
             format!(
                 "FROM \"{}\".\"{}\" AS {}",
-                source.domain, source.table, alias
+                "dashboard", source.table, alias
             )
         })
         .collect::<Vec<_>>()
@@ -340,5 +335,86 @@ mod tests {
 
         let result = parse_scope_definition(&scope_def);
         assert!(result.is_err());
+    }
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+    use sqlx::PgPool;
+    use serde_json::json;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_scope1_executes_against_real_db() {
+        let db_url = "postgresql://vibha:vibha_dev_2024@localhost:5440/vibha_dashboard";
+        let pool = PgPool::connect(db_url)
+            .await
+            .expect("DB connection failed");
+
+        // Fetch Scope 1 from database
+        let scope_row = sqlx::query!(
+            "SELECT query_definition FROM dashboard.analytics_scopes WHERE scope_name = 'Scope 1: Direct Emissions'"
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Scope 1 fetch failed");
+
+        let query_def: serde_json::Value = 
+            serde_json::from_value(serde_json::to_value(&scope_row.query_definition).unwrap()).unwrap();
+
+        // Test parsing
+        let parsed = parse_scope_definition(&query_def).expect("Parse failed");
+        assert_eq!(parsed.sources[0].table, "emissions");
+        println!("✓ Scope 1 definition parsed");
+
+        // Test execution
+        let kpis = vec!["co2e".to_string(), "category".to_string()];
+        let results = execute_scope_query(&pool, &query_def, &kpis, 10)
+            .await
+            .expect("Query execution failed");
+
+        assert!(!results.is_empty(), "Query should return rows");
+        println!("✓ Scope 1 executed: {} rows returned", results.len());
+
+        // Validate row structure
+        for row in results.iter().take(1) {
+            if let serde_json::Value::Object(obj) = row {
+                assert!(obj.contains_key("co2e"), "Missing co2e column");
+                assert!(obj.contains_key("category"), "Missing category column");
+                println!("✓ Row structure valid: {:?}", obj.keys().collect::<Vec<_>>());
+            }
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_scope2_executes_against_real_db() {
+        let db_url = "postgresql://vibha:vibha_dev_2024@localhost:5440/vibha_dashboard";
+        let pool = PgPool::connect(db_url)
+            .await
+            .expect("DB connection failed");
+
+        let scope_row = sqlx::query!(
+            "SELECT query_definition FROM dashboard.analytics_scopes WHERE scope_name = 'Scope 2: Energy Emissions'"
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("Scope 2 fetch failed");
+
+        let query_def: serde_json::Value = 
+            serde_json::from_value(serde_json::to_value(&scope_row.query_definition).unwrap()).unwrap();
+
+        let parsed = parse_scope_definition(&query_def).expect("Parse failed");
+        assert_eq!(parsed.sources[0].table, "emissions");
+        println!("✓ Scope 2 definition parsed");
+
+        let kpis = vec!["co2e".to_string(), "source".to_string()];
+        let results = execute_scope_query(&pool, &query_def, &kpis, 5)
+            .await
+            .expect("Query execution failed");
+
+        assert!(!results.is_empty());
+        println!("✓ Scope 2 executed: {} rows returned", results.len());
     }
 }
