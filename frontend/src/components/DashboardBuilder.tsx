@@ -34,11 +34,6 @@ interface DashboardBuilderProps {
   onEditComplete?: () => void;
 }
 
-const AVAILABLE_DOMAINS = {
-  greenops: ['emissions', 'sales'],
-  healthcare: ['patients', 'procedures'],
-  ecommerce: ['orders', 'products'],
-};
 
 const CHART_TYPES = [
   { id: 'bar', label: 'Bar Chart', icon: '📊', description: 'Compare values across categories' },
@@ -60,6 +55,9 @@ export function DashboardBuilder({ editDashboardId, editDashboardData, onEditCom
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [saveMessage, setSaveMessage] = useState('');
+  const [availableTables, setAvailableTables] = useState<string[]>([]);
+  const [loadingTables, setLoadingTables] = useState(false);
+
 
   const { data: schema, loading: schemaLoading, error: schemaError } = useSchemaFetch(
     form.domain,
@@ -80,22 +78,47 @@ export function DashboardBuilder({ editDashboardId, editDashboardData, onEditCom
     }
   }, [editDashboardData]);
 
+  // Fetch available tables on mount
+  React.useEffect(() => {
+    const fetchTables = async () => {
+      setLoadingTables(true);
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/schemas/tables');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableTables(data.tables);
+        }
+      } catch (err) {
+        console.error('❌ Error fetching tables:', err);
+      } finally {
+        setLoadingTables(false);
+      }
+    };
+    fetchTables();
+  }, []);
 
-  const availableTables = useMemo(() => {
-    return AVAILABLE_DOMAINS[form.domain as keyof typeof AVAILABLE_DOMAINS] || [];
-  }, [form.domain]);
 
-  const handleDomainChange = (newDomain: string) => {
-    const tables = AVAILABLE_DOMAINS[newDomain as keyof typeof AVAILABLE_DOMAINS];
-    setForm({
-      ...form,
-      domain: newDomain,
-      table: tables?.[0] || '',
-    });
-  };
 
-  const handleTableChange = (newTable: string) => {
-    setForm({ ...form, table: newTable });
+  const handleDomainChange = async (newDomain: string) => {
+    setLoadingTables(true);
+    try {
+      // Fetch available tables from backend
+      const response = await fetch('http://localhost:8000/api/v1/schemas/tables');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableTables(data.tables);
+        // Set form with new domain and first available table
+        setForm({
+          ...form,
+          domain: newDomain,
+          table: data.tables[0] || '',
+        });
+      }
+    } catch (err) {
+      console.error('❌ Error fetching tables:', err);
+    } finally {
+      setLoadingTables(false);
+    }
   };
 
   const handleAddKPI = (column: string) => {

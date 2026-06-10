@@ -16,6 +16,7 @@ use uuid::Uuid;
 use sqlx::Row;
 
 mod schema_registry;
+mod scopes_handler;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DirectQueryRequest {
@@ -438,7 +439,10 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/api/v1/direct-query", post(direct_query))
+        .route("/api/v1/schemas/tables", get(schema_registry::list_tables))
         .route("/api/v1/schema/:domain/:table", get(schema_registry::get_schema))
+        .route("/api/v1/scopes", get(scopes_handler::list_scopes))
+        .route("/api/v1/scopes/:id", get(scopes_handler::get_scope))
         .route("/api/v1/dashboards", get(list_dashboards).post(save_dashboard))
         .route("/api/v1/dashboards/:id", get(get_dashboard).put(update_dashboard))
         .with_state(state)

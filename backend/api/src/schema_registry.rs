@@ -8,7 +8,7 @@ use tracing::info;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ColumnMetadata {
     pub name: String,
-    pub r#type: String, // 'type' is a Rust keyword, use raw identifier
+    pub r#type: String,
     pub nullable: bool,
     pub indexed: bool,
 }
@@ -21,87 +21,41 @@ pub struct SchemaResponse {
     pub columns: Vec<ColumnMetadata>,
 }
 
-/// Mock schema data for development
-fn get_mock_schema(domain: &str, table: &str) -> Option<SchemaResponse> {
-    match (domain, table) {
-        ("greenops", "emissions") => Some(SchemaResponse {
-            table: "emissions".to_string(),
-            domain: "greenops".to_string(),
-            columns: vec![
-                ColumnMetadata {
-                    name: "category".to_string(),
-                    r#type: "string".to_string(),
-                    nullable: false,
-                    indexed: true,
-                },
-                ColumnMetadata {
-                    name: "co2e".to_string(),
-                    r#type: "float".to_string(),
-                    nullable: false,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "embedded_co2e".to_string(),
-                    r#type: "float".to_string(),
-                    nullable: true,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "usage_co2e".to_string(),
-                    r#type: "float".to_string(),
-                    nullable: true,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "date".to_string(),
-                    r#type: "date".to_string(),
-                    nullable: false,
-                    indexed: true,
-                },
-            ],
-        }),
-        ("greenops", "sales") => Some(SchemaResponse {
-            table: "sales".to_string(),
-            domain: "greenops".to_string(),
-            columns: vec![
-                ColumnMetadata {
-                    name: "region".to_string(),
-                    r#type: "string".to_string(),
-                    nullable: false,
-                    indexed: true,
-                },
-                ColumnMetadata {
-                    name: "revenue".to_string(),
-                    r#type: "float".to_string(),
-                    nullable: false,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "order_count".to_string(),
-                    r#type: "integer".to_string(),
-                    nullable: false,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "avg_order_value".to_string(),
-                    r#type: "float".to_string(),
-                    nullable: true,
-                    indexed: false,
-                },
-                ColumnMetadata {
-                    name: "date".to_string(),
-                    r#type: "date".to_string(),
-                    nullable: false,
-                    indexed: true,
-                },
-            ],
-        }),
-        _ => None,
+/// Handler: GET /api/v1/schemas/tables - List all available tables
+pub async fn list_tables(
+    axum::extract::State(state): axum::extract::State<crate::AppState>,
+) -> (StatusCode, Json<serde_json::Value>) {
+    info!("📋 Listing all tables in dashboard schema");
+
+    let result = sqlx::query_scalar::<_, String>(
+        "SELECT table_name FROM information_schema.tables 
+         WHERE table_schema = 'dashboard' AND table_type = 'BASE TABLE'
+         ORDER BY table_name"
+    )
+    .fetch_all(&state.db_pool)
+    .await;
+
+    match result {
+        Ok(tables) => {
+            info!("✅ Found {} tables", tables.len());
+            (
+                StatusCode::OK,
+                Json(json!({"tables": tables})),
+            )
+        }
+        Err(e) => {
+            info!("❌ Error listing tables: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "Failed to list tables"})),
+            )
+        }
     }
 }
 
-/// Handler: GET /api/v1/schema/{domain}/{table}
+/// Handler: GET /api/v1/schema/{domain}/{table} - Get real schema from database
 pub async fn get_schema(
+    axum::extract::State(state): axum::extract::State<crate::AppState>,
     axum::extract::Path((domain, table)): axum::extract::Path<(String, String)>,
 ) -> (StatusCode, Json<serde_json::Value>) {
     info!(
@@ -109,21 +63,53 @@ pub async fn get_schema(
         domain, table
     );
 
-    match get_mock_schema(&domain, &table) {
-        Some(schema) => {
+    let result = sqlx::query_as::<_, (String, String, bool)>(
+        "SELECT column_name, data_type, is_nullable = 'YES' as nullable
+         FROM information_schema.columns
+         WHERE table_schema = 'dashboard' AND table_name = $1
+         ORDER BY ordinal_position"
+    )
+    .bind(&table)
+    .fetch_all(&state.db_pool)
+    .await;
+
+    match result {
+        Ok(columns) => {
+            if columns.is_empty() {
+                info!("❌ Table not found: {}", table);
+                return (
+                    StatusCode::NOT_FOUND,
+                    Json(json!({"error": format!("Table {} not found", table)})),
+                );
+            }
+
+            let column_metadata: Vec<ColumnMetadata> = columns
+                .into_iter()
+                .map(|(name, col_type, nullable)| ColumnMetadata {
+                    name,
+                    r#type: col_type,
+                    nullable,
+                    indexed: false,
+                })
+                .collect();
+
+            let schema = SchemaResponse {
+                table,
+                domain,
+                columns: column_metadata,
+            };
+
             info!("✅ Schema found: {} columns", schema.columns.len());
             (
                 StatusCode::OK,
                 Json(serde_json::to_value(schema).unwrap_or(json!({}))),
             )
         }
-        None => {
-            info!("❌ Schema not found: domain={}, table={}", domain, table);
+        Err(e) => {
+            info!("❌ Error querying schema: {}", e);
             (
-                StatusCode::NOT_FOUND,
-                Json(json!({
-                    "error": format!("Schema not found for {}.{}", domain, table)
-                })),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "Failed to retrieve schema"})),
             )
         }
     }
