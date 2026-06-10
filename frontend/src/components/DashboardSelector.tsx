@@ -259,6 +259,14 @@ export function DashboardSelector({ onEditDashboard }: DashboardSelectorProps = 
                   Close
                 </button>
                 <button
+                  onClick={() => {
+                    if (loadedDashboard && onEditDashboard) {
+                      console.log('📝 Edit clicked, calling onEditDashboard with:', loadedDashboard.id);
+                      onEditDashboard(loadedDashboard.id, loadedDashboard);
+                    } else {
+                      console.warn('❌ Missing loadedDashboard or onEditDashboard callback');
+                    }
+                  }}
                   style={{
                     padding: '0.75rem 1.5rem',
                     backgroundColor: '#0066cc',
