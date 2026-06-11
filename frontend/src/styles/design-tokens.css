@@ -1,0 +1,233 @@
+/* ============================================================
+   Vibha Dashboard Platform — Design Tokens v1.0
+   Day 13 — Professional Visual Design System
+   Deploy to: frontend/src/styles/design-tokens.css
+   Import once in main.tsx:  import './styles/design-tokens.css'
+   ============================================================ */
+
+:root {
+  /* ---------- Color: Page & Surface ---------- */
+  --vibha-bg-page: #f6f7f9;          /* soft gray page background */
+  --vibha-bg-card: #ffffff;          /* widget card surface */
+  --vibha-bg-card-hover: #fafbfc;
+  --vibha-border-card: #e5e7eb;      /* 1px card border */
+  --vibha-border-subtle: #f0f1f3;    /* dividers inside cards */
+
+  /* ---------- Color: Brand & Accent ---------- */
+  --vibha-accent: #0e7c66;           /* Vibha green — primary actions, active states */
+  --vibha-accent-hover: #0b6553;
+  --vibha-accent-soft: #e6f4f1;      /* selected/active backgrounds */
+
+  /* ---------- Color: Text ---------- */
+  --vibha-text-primary: #111827;     /* KPI values, headings */
+  --vibha-text-secondary: #374151;   /* body, table cells */
+  --vibha-text-muted: #6b7280;       /* axis labels, captions, card subtitles */
+  --vibha-text-faint: #9ca3af;       /* placeholders, disabled */
+
+  /* ---------- Color: Semantic ---------- */
+  --vibha-success: #16a34a;
+  --vibha-warning: #d97706;
+  --vibha-danger: #dc2626;
+  --vibha-info: #2563eb;
+
+  /* ---------- Categorical Chart Palette: "vibha-default" ----------
+     Muted, professional, color-blind-aware ordering.
+     Mirrored in vibhaTheme.ts — keep in sync. */
+  --vibha-chart-1: #0e7c66;  /* green (brand) */
+  --vibha-chart-2: #3b82a0;  /* steel blue */
+  --vibha-chart-3: #c2703d;  /* terracotta */
+  --vibha-chart-4: #7c6fb0;  /* muted violet */
+  --vibha-chart-5: #b0527c;  /* muted rose */
+  --vibha-chart-6: #5a8a3c;  /* olive green */
+  --vibha-chart-7: #8c8c5a;  /* khaki */
+  --vibha-chart-8: #5f6b7a;  /* slate */
+
+  /* ---------- Spacing Scale (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ---------- Radii & Shadows ---------- */
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-card-hover: 0 4px 10px rgba(16, 24, 40, 0.08);
+  --shadow-drag: 0 8px 24px rgba(16, 24, 40, 0.16); /* RGL while dragging */
+
+  /* ---------- Typography ---------- */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-kpi: 30px;        /* KPI big number */
+  --font-size-card-title: 13px; /* widget titles */
+  --font-size-body: 14px;
+  --font-size-caption: 12px;    /* axis labels, legends, captions */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --letter-spacing-title: 0.02em;
+
+  /* ---------- Layout Zones ---------- */
+  --zone-filterbar-height: 56px;
+  --zone-kpi-height: 104px;
+  --grid-gutter: 16px;
+  --grid-row-height: 80px;      /* RGL rowHeight — keep in sync with LayoutEngine */
+}
+
+/* ============================================================
+   Base resets & page chrome
+   ============================================================ */
+
+body {
+  background: var(--vibha-bg-page);
+  font-family: var(--font-family);
+  color: var(--vibha-text-secondary);
+  font-size: var(--font-size-body);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Three-zone vertical structure ---------- */
+.vibha-dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gutter);
+  padding: var(--space-5) var(--space-6);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.vibha-zone-filters {
+  height: var(--zone-filterbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--vibha-bg-card);
+  border: 1px solid var(--vibha-border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 0 var(--space-4);
+  box-sizing: border-box;
+}
+
+.vibha-zone-kpis {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--grid-gutter);
+  min-height: var(--zone-kpi-height);
+}
+
+.vibha-zone-charts {
+  position: relative; /* RGL mounts here */
+}
+
+/* ============================================================
+   Card component styles (used by Card.tsx)
+   ============================================================ */
+
+.vibha-card {
+  background: var(--vibha-bg-card);
+  border: 1px solid var(--vibha-border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+.vibha-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.vibha-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  flex-shrink: 0;
+}
+
+.vibha-card-title {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--vibha-text-primary);
+  letter-spacing: var(--letter-spacing-title);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.vibha-card-subtitle {
+  font-size: var(--font-size-caption);
+  color: var(--vibha-text-muted);
+  margin: 2px 0 0;
+}
+
+.vibha-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vibha-card-body {
+  flex: 1;
+  min-height: 0;            /* critical: lets ECharts shrink properly */
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+/* ---------- KPI card internals ---------- */
+.vibha-kpi-value {
+  font-size: var(--font-size-kpi);
+  font-weight: var(--font-weight-bold);
+  color: var(--vibha-text-primary);
+  line-height: 1.1;
+  margin: 0;
+}
+
+.vibha-kpi-label {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--vibha-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-title);
+  margin: 0 0 var(--space-1);
+}
+
+.vibha-kpi-delta-up   { color: var(--vibha-success); font-size: var(--font-size-caption); font-weight: var(--font-weight-medium); }
+.vibha-kpi-delta-down { color: var(--vibha-danger);  font-size: var(--font-size-caption); font-weight: var(--font-weight-medium); }
+
+/* ============================================================
+   react-grid-layout integration polish
+   ============================================================ */
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--vibha-accent-soft) !important;
+  border: 1px dashed var(--vibha-accent);
+  border-radius: var(--radius-card);
+  opacity: 0.6;
+}
+
+.react-grid-item.react-draggable-dragging .vibha-card {
+  box-shadow: var(--shadow-drag);
+  cursor: grabbing;
+}
+
+/* drag handle = card header only, so chart clicks stay free for filtering */
+.vibha-drag-handle {
+  cursor: grab;
+}
+
+.react-grid-item > .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 0.6;
+}
