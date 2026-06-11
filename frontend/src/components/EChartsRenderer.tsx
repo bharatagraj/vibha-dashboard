@@ -73,11 +73,6 @@ export function autoDetectKpis(data: DataRow[]): KpiMetadata[] {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const VIBHA_PALETTE = [
-  '#2563eb', '#f59e0b', '#16a34a', '#dc2626', '#9333ea',
-  '#0891b2', '#db2777', '#65a30d', '#ea580c', '#475569',
-];
-
 function isMeasure(kpi: KpiMetadata): boolean {
   if (kpi.aggregation && kpi.aggregation !== 'none') return true;
   return kpi.data_type === 'number';
@@ -171,7 +166,7 @@ function buildCartesianOption(
   };
 
   return {
-    color: VIBHA_PALETTE,
+    // NOTE: Removed hardcoded VIBHA_PALETTE here — theme='vibha' in init() provides colors
     title: opts.title
       ? { text: opts.title, left: 'left', textStyle: { fontSize: 15, fontWeight: 600 } }
       : undefined,
@@ -213,7 +208,7 @@ function buildPieOption(
     .filter((d) => d.value > 0);
 
   return {
-    color: VIBHA_PALETTE,
+    // NOTE: Removed hardcoded VIBHA_PALETTE here — theme='vibha' in init() provides colors
     title: opts.title
       ? { text: opts.title, left: 'left', textStyle: { fontSize: 15, fontWeight: 600 } }
       : undefined,
@@ -276,8 +271,9 @@ function EChartsRendererComponent(props: EChartsRendererProps, ref: React.Forwar
 
   useEffect(() => {
     if (!containerRef.current) return;
-    chartRef.current = echarts.init(containerRef.current);
-    console.log(`✓ ECharts initialized for container`);
+    // DAY 13: Pass theme='vibha' to echarts.init() to use the registered Vibha theme
+    chartRef.current = echarts.init(containerRef.current, 'vibha');
+    console.log(`✓ ECharts initialized with vibha theme`);
 
     const handleResize = () => chartRef.current?.resize();
     window.addEventListener('resize', handleResize);

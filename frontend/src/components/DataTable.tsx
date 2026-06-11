@@ -3,6 +3,7 @@
  * Day 12, Hour 1: Table component for displaying filtered/unfiltered data rows
  *
  * Displays chart data in tabular format with optional filter badge.
+ * Day 13: Made responsive and flexible with container-based sizing.
  */
 
 import React from 'react';
@@ -33,7 +34,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
   const columns = Object.keys(data[0]);
 
   return (
-    <div style={{ marginTop: '2rem' }}>
+    <div style={{ marginTop: '2rem', width: '100%' }}>
       {/* Filter badge + clear button */}
       {filteredBy && (
         <div
@@ -71,13 +72,14 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
         </div>
       )}
 
-      {/* Table */}
+      {/* Table — Day 13: Flexible, responsive, no horizontal scroll */}
       <div
         style={{
-          overflowX: 'auto',
           border: '1px solid #e2e8f0',
           borderRadius: '8px',
           backgroundColor: 'white',
+          width: '100%',
+          overflow: 'hidden',
         }}
       >
         <table
@@ -85,6 +87,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
             width: '100%',
             borderCollapse: 'collapse',
             fontSize: '0.875rem',
+            tableLayout: 'auto', // Columns auto-adjust to content
           }}
         >
           <thead>
@@ -97,7 +100,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
                     textAlign: 'left',
                     fontWeight: 600,
                     color: '#475569',
-                    whiteSpace: 'nowrap',
+                    wordBreak: 'break-word', // Allow column headers to wrap if needed
                   }}
                 >
                   {col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' ')}
@@ -112,8 +115,9 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
                 style={{
                   borderBottom: '1px solid #e2e8f0',
                   backgroundColor: idx % 2 === 0 ? 'white' : '#f8fafc',
-                  '&:hover': { backgroundColor: '#f0f4f8' },
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f0f4f8')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? 'white' : '#f8fafc')}
               >
                 {columns.map((col) => {
                   const value = row[col];
@@ -133,6 +137,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data, filteredBy, onClearF
                       style={{
                         padding: '0.75rem 1rem',
                         color: '#1e293b',
+                        wordBreak: 'break-word', // Allow cell content to wrap
                       }}
                     >
                       {displayValue ?? '—'}

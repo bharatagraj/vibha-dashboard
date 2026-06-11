@@ -1,0 +1,267 @@
+/**
+ * Vibha Dashboard Components Stylesheet
+ * Styling for Card, LayoutEngine, and related UI elements
+ */
+
+/* =========================================================================
+   CARD COMPONENT STYLES
+   ========================================================================= */
+
+.vibha-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-card-bg, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--border-radius-lg, 8px);
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.vibha-card:hover {
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  border-color: var(--color-border-hover, #d1d5db);
+}
+
+.vibha-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--spacing-4, 1rem);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-card-header-bg, #f9fafb);
+  user-select: none;
+}
+
+.vibha-card-header.vibha-drag-handle {
+  cursor: grab;
+}
+
+.vibha-card-header.vibha-drag-handle:active {
+  cursor: grabbing;
+}
+
+.vibha-card-title {
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-size-sm, 13px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-primary, #111827);
+}
+
+.vibha-card-subtitle {
+  margin: var(--spacing-1, 0.25rem) 0 0 0;
+  padding: 0;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-muted, #6b7280);
+}
+
+.vibha-card-actions {
+  display: flex;
+  gap: var(--spacing-2, 0.5rem);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.vibha-card-body {
+  flex: 1;
+  padding: var(--spacing-4, 1rem);
+  overflow: auto;
+  background: var(--color-card-bg, #ffffff);
+}
+
+/* =========================================================================
+   LAYOUT ENGINE (REACT-GRID-LAYOUT) STYLES
+   ========================================================================= */
+
+.vibha-zone-charts {
+  width: 100%;
+  background: transparent;
+  margin-bottom: var(--spacing-6, 1.5rem);
+}
+
+.layout-grid {
+  background: transparent;
+}
+
+.layout-grid .react-grid-layout {
+  background: transparent;
+}
+
+/* RGL individual widget wrapper */
+.layout-grid .react-grid-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  touch-action: none;
+}
+
+.layout-grid .react-grid-item > div {
+  width: 100%;
+  height: 100%;
+}
+
+.layout-grid .react-grid-item.react-grid-placeholder {
+  background: var(--color-brand-primary, #0e7c66);
+  opacity: 0.2;
+  border-radius: var(--border-radius-lg, 8px);
+  border: 2px dashed var(--color-brand-primary, #0e7c66);
+  z-index: 2;
+}
+
+/* =========================================================================
+   REACT-RESIZABLE HANDLE (Resize Corner + Edges)
+   ========================================================================= */
+
+.react-resizable {
+  position: relative;
+}
+
+.react-resizable-hide > .react-resizable-handle {
+  display: none;
+}
+
+/* Main resize handle — bottom-right corner */
+.react-resizable-handle {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  background: transparent;
+  touch-action: none;
+  z-index: 10;
+}
+
+/* Visual indicator for resize handle */
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid #0e7c66;
+  border-bottom: 2px solid #0e7c66;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Show resize handle on card hover */
+.vibha-card:hover .react-resizable-handle::after {
+  opacity: 0.7;
+}
+
+.vibha-card:hover .react-resizable-handle {
+  background: rgba(14, 124, 102, 0.08);
+  border-radius: 4px;
+}
+
+/* Right-edge and bottom-edge resize helpers (pseudo-elements) */
+.react-grid-item:hover::before {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(14, 124, 102, 0.3);
+  cursor: ew-resize;
+  z-index: 5;
+}
+
+.react-grid-item:hover::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 4px;
+  background: rgba(14, 124, 102, 0.3);
+  cursor: ns-resize;
+  z-index: 5;
+}
+
+/* =========================================================================
+   ZONE-BASED LAYOUT (Three-Zone System)
+   ========================================================================= */
+
+.vibha-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4, 1rem);
+}
+
+.vibha-zone-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4, 1rem);
+  flex-shrink: 0;
+}
+
+.vibha-zone-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4, 1rem);
+  flex-shrink: 0;
+}
+
+.vibha-zone-charts-wrapper {
+  flex: 1;
+  min-height: 400px;
+  width: 100%;
+}
+
+.vibha-zone-charts-wrapper h3 {
+  margin: 0 0 var(--spacing-4, 1rem) 0;
+  font-size: var(--font-size-lg, 18px);
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+
+.vibha-zone-charts-wrapper > p {
+  margin: 0 0 var(--spacing-4, 1rem) 0;
+  font-size: var(--font-size-sm, 13px);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+/* =========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================= */
+
+@media (max-width: 768px) {
+  .vibha-card-header {
+    flex-direction: column;
+    gap: var(--spacing-2, 0.5rem);
+  }
+
+  .vibha-card-actions {
+    align-self: flex-end;
+  }
+
+  .vibha-zone-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+/* =========================================================================
+   ACCESSIBILITY
+   ========================================================================= */
+
+.vibha-drag-handle:focus {
+  outline: 2px solid var(--color-focus, #3b82f6);
+  outline-offset: 2px;
+}
+
+.vibha-card:focus-within {
+  border-color: var(--color-focus, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
