@@ -1,9 +1,10 @@
-/// DashboardViewer.tsx — Display dashboard data with KPI cards and data table
+/// DashboardViewer.tsx — Display dashboard data with KPI cards, charts, and data table
 /// Consumes the /api/v1/dashboards/:id/data endpoint
-/// Supports custom KPI names, units, and formatting
+/// Day 11: Integrated with EChartsRenderer (ECharts + auto-detection)
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertCircle, Loader2, TrendingUp } from 'lucide-react';
+import { EChartsRenderer } from './EChartsRenderer';
 
 interface KpiMetadata {
   database_column: string;
@@ -45,15 +46,15 @@ function useDashboardData(dashboardId: string, apiBaseUrl: string = '/api/v1') {
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch(
           `${apiBaseUrl}/dashboards/${dashboardId}/data?limit=100`
         );
-        
+
         if (!response.ok) {
-          throw new Error(`API error: ${response.statusCode}`);
+          throw new Error(`API error: ${response.status}`);
         }
-        
+
         const json = await response.json();
         setData(json);
       } catch (err) {
@@ -82,14 +83,14 @@ function formatKpiValue(
   }
 
   const num = typeof value === 'string' ? parseFloat(value) : value;
-  
+
   if (isNaN(num)) {
     return String(value);
   }
 
   // Format based on data type or decimals
   let formatted: string;
-  
+
   if (kpi.data_type === 'percent') {
     formatted = `${(num * 100).toFixed(kpi.decimals)}%`;
   } else if (kpi.data_type === 'currency') {
@@ -195,6 +196,44 @@ function DataTable({
   );
 }
 
+/// Charts Section — EChartsRenderer handles auto-detection internally
+function ChartsSection({
+  data,
+}: {
+  data: Record<string, string | number | null>[];
+}) {
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Charts & Visualizations</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pie Chart — auto-detects dimensions/measures */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <EChartsRenderer
+            type="pie"
+            data={data}
+            title="Distribution"
+            height={360}
+          />
+        </div>
+
+        {/* Bar Chart — auto-detects dimensions/measures */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <EChartsRenderer
+            type="bar"
+            data={data}
+            title="Comparison"
+            height={360}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /// Main DashboardViewer Component
 export function DashboardViewer({
   dashboardId,
@@ -259,6 +298,9 @@ export function DashboardViewer({
           </div>
         </div>
       )}
+
+      {/* Charts Section — Day 11, Hour 2 */}
+      <ChartsSection data={data.data} />
 
       {/* Data Table */}
       {data.data.length > 0 && (

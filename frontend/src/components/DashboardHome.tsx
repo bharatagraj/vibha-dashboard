@@ -3,7 +3,7 @@ import { DashboardSelector } from './DashboardSelector'
 import { DynamicFilters } from './DynamicFilters'
 import { DynamicKPIs } from './DynamicKPIs'
 import { ExportButtons } from './ExportButtons'
-import { ChartRenderer } from './ChartRenderer'
+import { EChartsRenderer } from './EChartsRenderer'
 import { getDashboardConfig } from '@/data/dashboards'
 import { getMockChartData } from '@/services/mockApi'
 import { useDashboardData } from '@/hooks/useDashboardData'
@@ -11,7 +11,7 @@ import { logPerformance } from '@/services/performanceMonitor'
 
 export const DashboardHome: React.FC = () => {
   logPerformance('DashboardHome render start')
-  
+
   const [selectedDashboardId, setSelectedDashboardId] = useState('co2_dashboard')
   const [filterValues, setFilterValues] = useState<Record<string, any>>({})
   const { loading, error, data, kpiValues, fetchData } = useDashboardData()
@@ -23,7 +23,7 @@ export const DashboardHome: React.FC = () => {
     if (!dashboardConfig) return
 
     logPerformance('Fetching dashboard data...')
-    
+
     fetchData({
       table: dashboardConfig.table,
       domain: dashboardConfig.domain,
@@ -91,17 +91,11 @@ export const DashboardHome: React.FC = () => {
               <h4 style={{ marginTop: 0 }}>{chartConfig.title}</h4>
               {loading && <div style={{ textAlign: 'center', color: '#999' }}>Loading chart...</div>}
               {!loading && (
-                <ChartRenderer 
-                  spec={{
-                    table: dashboardConfig.table,
-                    domain: dashboardConfig.domain,
-                    columns: [],
-                    filters: null,
-                    groupBy: [],
-                    chartType: chartConfig.type,
-                    dimensions: { width: 500, height: 300, margin: { top: 20, right: 20, bottom: 20, left: 60 }, xAxisKey: chartConfig.xAxis || 'x', yAxisKey: chartConfig.yAxis || 'y' },
-                  }}
+                <EChartsRenderer
+                  type={chartConfig.type as any}
                   data={chartData}
+                  title={chartConfig.title}
+                  height={300}
                 />
               )}
             </div>

@@ -1,6 +1,9 @@
 /**
- * ChartRenderer.tsx — Vibha Dashboard Platform
+ * EChartsRenderer.tsx — Vibha Dashboard Platform
  * Day 11, Hours 1-2: ECharts foundation + auto-detection
+ * 
+ * New ECharts-based renderer (Day 11). Does NOT use the old spec-based interface.
+ * Used by DashboardViewer only. DashboardHome continues using old D3-based ChartRenderer.
  */
 
 import { useEffect, useRef } from 'react';
@@ -23,7 +26,7 @@ export type DataRow = Record<string, any>;
 
 export type ChartType = 'line' | 'bar' | 'pie' | 'area' | 'heatmap' | 'scatter' | 'gauge';
 
-export interface ChartRendererProps {
+export interface EChartsRendererProps {
   type: ChartType;
   data: DataRow[];
   kpis?: KpiMetadata[];
@@ -112,7 +115,7 @@ function formatValue(value: number, kpi?: KpiMetadata): string {
 }
 
 export function resolveColumns(
-  props: Pick<ChartRendererProps, 'xAxis' | 'yAxis' | 'kpis' | 'data'>,
+  props: Pick<EChartsRendererProps, 'xAxis' | 'yAxis' | 'kpis' | 'data'>,
 ): { x: string | null; y: string | null; kpis: KpiMetadata[]; error: string | null } {
   const { data } = props;
   
@@ -267,13 +270,8 @@ export function buildChartOption(type: ChartType, data: DataRow[], kpis: KpiMeta
 // Component
 // ---------------------------------------------------------------------------
 
-function ChartRenderer(props: ChartRendererProps) {
+function EChartsRenderer(props: EChartsRendererProps) {
   const { type, data, kpis: providedKpis, xAxis, yAxis, title, smooth = true, showLegend = true, height = 360 } = props;
-  
-  // DEBUG: Log what props we received
-  console.log('Props object keys:', Object.keys(props));
-  console.log('Destructured type:', type);
-  console.log('Full props:', props);
 
   const resolveResult = resolveColumns({ xAxis, yAxis, kpis: providedKpis, data });
   const { x, y, kpis, error } = resolveResult;
@@ -335,5 +333,5 @@ function ChartRenderer(props: ChartRendererProps) {
   return <div ref={containerRef} style={{ width: '100%', height }} data-testid="chart-canvas" />;
 }
 
-export { ChartRenderer };
-export default ChartRenderer;
+export { EChartsRenderer };
+export default EChartsRenderer;
