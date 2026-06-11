@@ -1,13 +1,15 @@
 /**
  * EChartsRenderer.tsx — Vibha Dashboard Platform
  * Day 11, Hours 1-2: ECharts foundation + auto-detection
- * 
- * New ECharts-based renderer (Day 11). Does NOT use the old spec-based interface.
- * Used by DashboardViewer only. DashboardHome continues using old D3-based ChartRenderer.
+ * Day 12, Hour 1: Added click event handler for drill-down filtering
+ * Day 12, Hour 2: Added event bus emission for cross-chart filtering
+ *
+ * ECharts-based renderer. Used by DashboardHome and DashboardViewer.
  */
 
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import { useChartEventEmitter } from '@/hooks/useChartEvents';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +38,7 @@ export interface EChartsRendererProps {
   smooth?: boolean;
   showLegend?: boolean;
   height?: number;
+  onChartClick?: (categoryName: string) => void; // Direct callback (Hour 1)
 }
 
 // ---------------------------------------------------------------------------
@@ -118,9 +121,9 @@ export function resolveColumns(
   props: Pick<EChartsRendererProps, 'xAxis' | 'yAxis' | 'kpis' | 'data'>,
 ): { x: string | null; y: string | null; kpis: KpiMetadata[]; error: string | null } {
   const { data } = props;
-  
-  const kpis = props.kpis && props.kpis.length > 0 
-    ? props.kpis 
+
+  const kpis = props.kpis && props.kpis.length > 0
+    ? props.kpis
     : autoDetectKpis(data);
 
   if (!kpis || kpis.length === 0) {
@@ -271,13 +274,16 @@ export function buildChartOption(type: ChartType, data: DataRow[], kpis: KpiMeta
 // ---------------------------------------------------------------------------
 
 function EChartsRenderer(props: EChartsRendererProps) {
-  const { type, data, kpis: providedKpis, xAxis, yAxis, title, smooth = true, showLegend = true, height = 360 } = props;
+  const { type, data, kpis: providedKpis, xAxis, yAxis, title, smooth = true, showLegend = true, height = 360, onChartClick } = props;
 
   const resolveResult = resolveColumns({ xAxis, yAxis, kpis: providedKpis, data });
   const { x, y, kpis, error } = resolveResult;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
+
+  // NEW (Hour 2): Event emitter for cross-chart filtering
+  const emitChartEvent = useChartEventEmitter();
 
   const option = error ? null : buildChartOption(type, data, kpis, x ?? '', y ?? '', { title, smooth, showLegend });
 
@@ -300,6 +306,29 @@ function EChartsRenderer(props: EChartsRendererProps) {
       chartRef.current.setOption(option, { notMerge: false });
     }
   }, [option]);
+
+  // Click handler: call direct callback (Hour 1) + emit event (Hour 2)
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    const handleChartClick = (params: any) => {
+      if (params.name) {
+        // Hour 1: Direct callback to parent
+        onChartClick?.(params.name);
+
+        // Hour 2: Emit event for cross-chart filtering
+        emitChartEvent('SELECT_CATEGORY', { categoryName: params.name });
+      }
+    };
+
+    chartRef.current.on('click', handleChartClick);
+
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.off('click', handleChartClick);
+      }
+    };
+  }, [onChartClick, emitChartEvent]);
 
   if (error) {
     return (
