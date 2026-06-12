@@ -77,13 +77,17 @@
 
 **For high-level context:** Read this file (you're reading it).
 
-**For detailed priorities, effort estimates, and v1.1 features by importance:** See the **backlog folder**:
-- **Location:** `C:\Users\bhara\Projects\Claude\VibhaDashboard\backlog\`
-- **Active backlog:** `VibhaDashboard_BACKLOG.md` (current priorities, updated weekly)
-- **Policy & grooming process:** `VibhaDashboard_BACKLOG-POLICY.md` (how we decide and track changes)
-- **Versioned snapshots:** `VibhaDashboard_BACKLOG_yyyy-mm-dd_hh-mm-ss.md` (immutable history of roadmap decisions)
+**For detailed priorities, effort estimates, and v1.1 features by importance:** See the **external backlog folder**:
+- **Location:** C:\Users\bhara\Projects\Claude\VibhaDashboard\backlog\
+- **Active backlog:** VibhaDashboard_BACKLOG.md (current priorities, updated weekly)
+- **Policy & grooming process:** VibhaDashboard_BACKLOG-POLICY.md (how we decide and track changes)
+- **Versioned snapshots:** VibhaDashboard_BACKLOG_yyyy-mm-dd_hh-mm-ss.md (immutable history of roadmap decisions)
+- **Status:** Kept separate from git; versioned by daily backup script only
 
-**For architecture and design decisions:** See `ADR/` folder in the repo root (decision records with rationale).
+**For architecture and design decisions:** See the **external ADR folder**:
+- **Location:** C:\Users\bhara\Projects\Claude\VibhaDashboard\ADR\
+- **Contents:** Architecture Decision Records with rationale, design choices, alternatives considered
+- **Status:** Kept separate from git; versioned by daily backup script only
 
 ---
 
@@ -96,6 +100,8 @@
 **Authored content protected, sediment excluded** — Backups contain full source + git history via bundles, not compiler caches or downloaded packages.
 
 **Open source, 100% API-pluggable** — No vendor lock-in; all tools (Valkey, Kafka, pgvector, Rig, Mistral, ECharts) are open-source and replaceable.
+
+**Folder discipline** — Documentation organized by purpose: ADRs in /ADR/, backlog in /backlog/, session notes in /sessions/, specs in /specs/. Each lives in its designated location; nothing saved randomly.
 
 ---
 
@@ -114,9 +120,9 @@
 
 ## Questions?
 
-- **Product priorities or timeline:** See backlog folder (Monday grooming updates)
-- **Technical architecture:** See `ADR/` folder for decisions and rationale
-- **Code or API usage:** See `README.md` in repo root
+- **Product priorities or timeline:** See backlog folder at C:\Users\bhara\Projects\Claude\VibhaDashboard\backlog\ (Monday grooming updates)
+- **Technical architecture & design decisions:** See ADR folder at C:\Users\bhara\Projects\Claude\VibhaDashboard\ADR\ (Architecture Decision Records with rationale)
+- **Code or API usage:** See README.md in repo root (to be created)
 
 ---
 
